@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use League\CommonMark\Extension\CommonMark\Renderer\Inline\ImageRenderer;
 use PragmaRX\Google2FA\Google2FA;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -55,5 +56,31 @@ class Google2FAController extends Controller
         }
 
         return back()->withErrors(['کد وارد شده اشتباه است']);
+    }
+
+    public function create()
+    {
+        return view('2fa.verify');
+    }
+
+    public function active2FA(Request $request)
+    {
+
+        if(!auth()->check()){
+            return redirect('/login');
+        }
+        $auth = auth()->user();
+        if($auth->google2fa_enabled){
+            $google2fa = new Google2FA();
+            if ($google2fa->verifyKey(decrypt($auth->google2fa_secret), $request->get('one_time_password'))) {
+                session(['google2fa_passed' => true]);
+
+                return redirect('/dashboard');
+            }else{
+                Auth::logout($auth);
+            }
+            return redirect('/login');
+        }
+        return redirect('/dashboard');
     }
 }

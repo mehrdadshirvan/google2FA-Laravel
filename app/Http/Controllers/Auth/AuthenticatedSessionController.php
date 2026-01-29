@@ -27,17 +27,9 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
-        $auth = User::where('email', $request->only('email'))->first();
-        if($auth->google2fa_enabled){
 
-            $google2fa = new Google2FA();
-            if ($google2fa->verifyKey(decrypt($auth->google2fa_secret), $request->get('code'))) {
-                session(['google2fa_passed' => true]);
-                $request->session()->regenerate();
-                return redirect()->intended(route('dashboard', absolute: false));
-            }
-            return $this->destroy($request);
-        }
+        $request->session()->regenerate();
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

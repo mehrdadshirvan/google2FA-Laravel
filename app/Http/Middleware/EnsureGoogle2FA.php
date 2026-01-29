@@ -16,13 +16,17 @@ class EnsureGoogle2FA
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = auth()->user();
-
-        if ($user && $user->google2fa_enabled && !session()->get('google2fa_passed')
-        ) {
-            Auth::logout($user);
-            return redirect('/login');
+        if(auth()->check()){
+            $user = auth()->user();
+            if ($user &&
+                $user->google2fa_enabled &&
+                !session()->get('google2fa_passed')
+            ) {
+                return redirect()->route('2fa.verify');
+            }
+            return $next($request);
         }
-
-        return $next($request);    }
+        Auth::logout($user);
+        return redirect('/login');
+    }
 }
